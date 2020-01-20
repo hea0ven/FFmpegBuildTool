@@ -10,8 +10,8 @@
 
 
 # Thanks
-> [biezhihua]{https://github.com/biezhihua}
+> [biezhihua](https://github.com/biezhihua)
 
 # License
 
->[License]{https://www.gnu.org/licenses/gpl-3.0.txt}
+>[License](https://www.gnu.org/licenses/gpl-3.0.txt)
