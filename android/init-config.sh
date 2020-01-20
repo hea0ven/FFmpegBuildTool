@@ -12,7 +12,7 @@ echo "--------------------"
 
 if [ -f 'config/module.sh' ]; then
     rm ./config/module.sh
-fi 
+fi
 
 echo_usage() {
     echo "Usage:"
@@ -49,6 +49,11 @@ case "$FF_TARGET" in
     ;;
     lite)
         cp config/module-lite.sh config/module.sh
+        cat config/module.sh
+        echo "config complete"
+    ;;
+    mp4-to-ts)
+        cp config/module-mp4-to-ts.sh config/module.sh
         cat config/module.sh
         echo "config complete"
     ;;

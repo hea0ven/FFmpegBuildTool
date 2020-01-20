@@ -98,7 +98,9 @@ function make_android_ffmpeg_config_params() {
     export CXX=${android_standalone_toolchain_cross_prefix_name}-clang++
     export LD=${android_standalone_toolchain_cross_prefix_name}-ld
     export AR=${android_standalone_toolchain_cross_prefix_name}-ar
+    export AS=${android_standalone_toolchain_cross_prefix_name}-as
     export STRIP=${android_standalone_toolchain_cross_prefix_name}-strip
+    export RANLIB=${android_standalone_toolchain_cross_prefix_name}-ranlib
 
     c_flags="$c_flags -O3 -fPIC -Wall -pipe \
         -std=c99 \
@@ -109,7 +111,7 @@ function make_android_ffmpeg_config_params() {
 
     # config
     export COMMON_CFG_FLAGS=
-    . ./config/module.sh
+    . ./config/module-mp4-to-ts.sh
     cfg_flags="${COMMON_CFG_FLAGS} ${cfg_flags}"
 
     # with ffmpeg standard options:
@@ -143,15 +145,28 @@ function make_android_ffmpeg_config_params() {
         cfg_flags="$cfg_flags --enable-inline-asm"
     fi
 
-    # with openssl
-    if [[ -f "${output_path_depend}/lib/libssl.a" ]]; then
-        export pkg_config_path=${output_path_depend}/lib/pkgconfig
-        cfg_flags="$cfg_flags --enable-protocol=https"
-        cfg_flags="$cfg_flags --enable-openssl"
-        cfg_flags="$cfg_flags --pkg-config=pkg-config"
-        c_flags="$c_flags -I${output_path_depend}/include"
-        DEP_LIBS="$DEP_LIBS -L${output_path_depend}/lib -lssl -lcrypto"
+#需要引入多个库编译则需要循环去数据生成库，然后判断是否存在库文件
+    #with libsrt
+    if [[ -f "${output_path_depend}/../srt-${target_arch}/lib/libsrt.a" ]]; then
+      echo "libsrt detected"
+       # export pkg_config_path=${output_path_depend}/lib/pkgconfig
+      cfg_flags="$cfg_flags --enable-libsrt"
+      cfg_flags="$cfg_flags --enable-protocol=libsrt"
+      # cfg_flags="$cfg_flags --pkg-config=pkg-config"
+      c_flags="$c_flags -I${output_path_depend}/../srt-${target_arch}/include"
+      ld_libs="$ld_libs -L${output_path_depend}/../srt-${target_arch}/lib -lsrt"
     fi
+
+    #with openssl
+    if [[ -f "${output_path_depend}/lib/libssl.a" ]]; then
+        echo "Openssl detected"
+        # export pkg_config_path=${output_path_depend}/lib/pkgconfig
+        cfg_flags="$cfg_flags --enable-openssl"
+        # cfg_flags="$cfg_flags --pkg-config=pkg-config"
+        c_flags="$c_flags -I${output_path_depend}/include"
+        ld_libs="$ld_libs -L${output_path_depend}/lib -lssl -lcrypto"
+    fi
+
 
     echo "c_flags = $c_flags"
     echo ""
@@ -170,7 +185,9 @@ function make_android_ffmpeg_config_params() {
     echo "CXX = $CXX"
     echo "LD = $LD"
     echo "AR = $AR"
+    echo "AS = $AS"
     echo "STRIP = $STRIP"
+    echo "RANLIB = $RANLIB"
 }
 
 function make_android_product() {
@@ -183,20 +200,26 @@ function make_android_product() {
     cd ${source_path}
 
     echo "current_directory = ${source_path}"
-
+## 交叉编译时Android引用openssl-v1.1.1最新版时需要打补丁添加识别字段,如果还是找不到，需要自己手动修改ffmpeg
+##.configure文件中openssl库判断部分
     git add -A
     git stash
     patch -p0 ./configure ${current_path}/patch/configure-patch.patch
 
     ./configure ${cfg_flags} \
         --extra-cflags="$c_flags" \
-        --extra-ldflags="$ld_libs $ld_flags"
+        --extra-ldflags="${ld_libs} $ld_flags"
 
     make clean
 
     make install -j8
 
     cd ${current_path}
+
+    rm -rf ${product_path}
+    mkdir -p ${product_path}/lib
+    cp -r ${output_path}/include ${product_path}/include
+    cp -r ${output_path}/lib ${product_path}/lib
 
     echo "product_path = ${product_path}"
     echo ""
@@ -255,6 +278,8 @@ function make_android_product_so() {
         ${ld_libs} \
         -o ${product_path}/lib/${so_name}
 
+    echo "ffmpeg build complete"
+    echo ""
     #    mkdir -p ${product_path}/lib/pkgconfig
     #    cp ${output_path}/lib/pkgconfig/*.pc ${product_path}/lib/pkgconfig
     #
@@ -283,7 +308,7 @@ function compile() {
     make_android_ffmpeg_config_params
     make_android_toolchain
     make_android_product
-    make_android_product_so
+    # make_android_product_so
 }
 
 target_arch=$1
@@ -292,7 +317,7 @@ name=ffmpeg
 name_depend=openssl
 assembler_sub_dirs=
 link_module_dirs="compat libavcodec libavfilter libavformat libavutil libswresample libswscale"
-so_simple_name=sffmpeg
+so_simple_name=ffmpeg
 so_name=lib${so_simple_name}.so
 
 function main() {
@@ -314,11 +339,13 @@ function main() {
             if [[ -d ${name}-${arch} ]]; then
                 cd ${name}-${arch} && git clean -xdf && cd -
             fi
+            rm -rf ./build/output/${name}-${arch}/**
+            rm -rf ./build/product/${name}-${arch}/**
+            rm -rf ./build/toolchain/${name}-${arch}/**
+
+            echo "Clean ${name}-${arch} ffmpeg successfully"
         done
-        rm -rf ./build/output/**
-        rm -rf ./build/product/**
-        rm -rf ./build/toolchain/**
-        echo "clean complete"
+
         ;;
     check)
         echo_arch

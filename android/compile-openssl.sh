@@ -101,16 +101,16 @@ function main() {
             compile
         ;;
         clean)
-            for arch in ${arch_all}
-            do
+            for arch in ${arch_all}; do
                 if [[ -d ${name}-${arch} ]]; then
                     cd ${name}-${arch} && git clean -xdf && cd -
                 fi
+                rm -rf ./build/output/${name}-${arch}/**
+                rm -rf ./build/product/${name}-${arch}/**
+                rm -rf ./build/toolchain/${name}-${arch}/**
+                echo "clean ${name}-${arch} successfully"
+                echo ""
             done
-            rm -rf ./build/output/**
-            rm -rf ./build/product/**
-            rm -rf ./build/toolchain/**
-            echo "clean complete"
         ;;
         check)
             echo_arch

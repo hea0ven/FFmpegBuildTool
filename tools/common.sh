@@ -9,7 +9,7 @@ set -e
 function pull_repository() {
 
     echo "--------------------"
-    echo -e "${red}[*] pull ffmpeg=$upstream base branch=$branch ${nc}"
+    echo -e "${red}[*] pull ${name}=$upstream base branch=$branch ${nc}"
     echo "--------------------"
 
     current_path=$(pwd)
@@ -93,11 +93,10 @@ function init_repository() {
         ;;
     clean)
         for arch in ${arch_all}; do
-            if [[ -d build/${name}-${arch} ]]; then
-                rm -rf build/${name}-${arch}
+            if [[ -d build/src/${name}-${arch} ]]; then
+                rm -rf build/src/${name}-${arch}
             fi
         done
-        echo "clean complete"
         ;;
     *)
         echo_init_usage
@@ -402,13 +401,16 @@ function make_openssl_product() {
     echo ""
     echo "product_path_lib = ${product_path}/lib"
     echo ""
+    echo "finish openssl successfully"
 }
+
 
 # 构建AndroidNDK工具链
 function make_android_toolchain() {
     android_standalone_toolchain_flags="$android_standalone_toolchain_flags --install-dir=$toolchain_path"
     ${ANDROID_NDK}/build/tools/make-standalone-toolchain.sh \
         ${android_standalone_toolchain_flags} \
+        --verbose \
         --platform=${android_platform_name} \
         --toolchain=${android_standalone_toolchain_name} \
         --force

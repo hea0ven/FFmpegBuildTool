@@ -141,10 +141,10 @@ function main() {
                 cd ${name}-${arch} && git clean -xdf && cd -
             fi
         done
-        rm -rf ./build/output/**
-        rm -rf ./build/product/**
-        rm -rf ./build/toolchain/**
-        echo "clean complete"
+        rm -rf ./build/output/${name}-${arch}/**
+        rm -rf ./build/product/${name}-${arch}/**
+        rm -rf ./build/toolchain/${name}-${arch}/**
+        echo "clean opensssl complete"
         ;;
     check)
         echo_arch
