@@ -14,7 +14,7 @@ name=ffmpeg
 upstream=https://github.com/FFmpeg/FFmpeg.git
 
 # 库分支
-branch=origin/release/4.2
+branch=origin/release/4.3
 
 # 本地库地址
 local_repo=../repository/ffmpeg

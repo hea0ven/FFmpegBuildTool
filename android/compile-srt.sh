@@ -67,7 +67,7 @@ function make_android_srt_config_params() {
         # cfg_flags="$cfg_flags android-x86_64"
 
      case "$ndk_rel" in
-        18*|19*)
+        18*|19* | 20* | 21*)
             android_platform_name=23
         ;;
         13*|14*|15*|16*|17*)
@@ -86,21 +86,26 @@ function make_android_srt_config_params() {
     export CFLAGS="-fPIE -fPIC"
     export LDFLAGS="-pie"
 
-    if [[ -f "${output_path_depend}/lib/libssl.a" ]]; then
+    for output_depend in ${output_path_depend}
+    do
+    if [[ -f "${output_depend}/lib/libssl.a" ]]; then
       echo "find openssl"
       echo ""
+      export pkg_config_path="${pkg_config_path}:${output_depend}/lib/pkgconfig"
       cfg_flags="$cfg_flags --use-openssl-pc=OFF"
-      cfg_flags="$cfg_flags --openssl-ssl-library=${output_path_depend}/lib/libssl.a"
-      cfg_flags="$cfg_flags --openssl-crypto-library=${output_path_depend}/lib/libcrypto.a"
-      cfg_flags="$cfg_flags --openssl-include-dir=${output_path_depend}/include/"
+      cfg_flags="$cfg_flags --openssl-ssl-library=${output_depend}/lib/libssl.a"
+      cfg_flags="$cfg_flags --openssl-crypto-library=${output_depend}/lib/libcrypto.a"
+      cfg_flags="$cfg_flags --openssl-include-dir=${output_depend}/include/"
     fi
+    done
+    
 
 
     cfg_flags="$cfg_flags --prefix=$output_path"
     cfg_flags="$cfg_flags --cmake_install_prefix=${output_path}"
-    cfg_flags="$cfg_flags --enable-static"
-    cfg_flags="$cfg_flags --disable-shared"
-    # cfg_flags="$cfg_flags --with-target-path=${toolchain_path}"
+    cfg_flags="$cfg_flags --enable-static=1"
+    cfg_flags="$cfg_flags --enable-shared=0"
+    cfg_flags="$cfg_flags --pkg_config_path=${pkg_config_path}"
     cfg_flags="$cfg_flags --cmake_system_name=Android"
     cfg_flags="$cfg_flags --CMAKE_C_COMPILER_RANLIB"
     cfg_flags="$cfg_flags --CMAKE_C_COMPILER_RANLIB=${RANLIB}"
@@ -108,6 +113,8 @@ function make_android_srt_config_params() {
     cfg_flags="$cfg_flags --CMAKE_RANLIB=${RANLIB}"
     cfg_flags="$cfg_flags --cmake_android_api=${android_platform_name}"
     cfg_flags="$cfg_flags --cmake_android_arch_abi=${android_platform_arch_name}"
+    cfg_flags="$cfg_flags --enable_stdcxx_sync=on"
+    
 
     echo "ranlib = $ranlib"
     echo "cfg_flags = $cfg_flags"
@@ -188,7 +195,7 @@ function main() {
             compile
         ;;
         clean)
-            for arch in ${arch_all};
+            for arch in ${arch_all}
             do
                 if [[ -d ${name}-${arch} ]]; then
                     echo "${name}-${arch}"

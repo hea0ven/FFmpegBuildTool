@@ -112,7 +112,7 @@ function echo_arch() {
     echo -e "${red}[*] check arch ${nc}"
     echo "--------------------"
     echo "arch_all = ${arch_all}"
-    echo "arch = ${target_arch}"
+    echo "target_arch = ${target_arch}"
     echo ""
 }
 
@@ -152,17 +152,17 @@ function check_ndk() {
     ndk_rel=$(grep -o '^Pkg\.Revision.*=[0-9]*.*' ${ANDROID_NDK}/source.properties 2>/dev/null | sed 's/[[:space:]]*//g' | cut -d "=" -f 2)
 
     case "$ndk_rel" in
-    13* | 14* | 15* | 16* | 17* | 18* | 19* | 20*)
+    13* | 14* | 15* | 16* | 17* | 18* | 19* | 20* | 21*)
         if test -d ${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.9; then
             echo "ndk version = r$ndk_rel"
         else
-            echo "You need the NDK r16b r17c 18b 19 20"
+            echo "You need the NDK r16b r17c 18b 19 20,21"
             echo "https://developer.android.com/ndk/downloads/"
             exit 1
         fi
         ;;
     *)
-        echo "You need the NDK r16b r17c 18b 19 20"
+        echo "You need the NDK r16b r17c 18b 19 20 21"
         echo "https://developer.android.com/ndk/downloads/"
         exit 1
         ;;
@@ -266,7 +266,6 @@ function make_env_params() {
     echo -e "${red}[*] make env params ${nc}"
     echo "--------------------"
 
-    build_root=$(pwd)/build
     build_name=${name}-${target_arch}
     source_path=${build_root}/src/${build_name}
     output_path=${build_root}/output/${build_name}
@@ -297,22 +296,26 @@ function make_env_params() {
     echo ""
     echo "toolchain_path = $toolchain_path"
 
-    if [[ ! -z ${name_depend} ]]; then
 
-        build_name_depend=${name_depend}-${target_arch}
-        source_path_depend=${build_root}/src/${build_name_depend}
-        output_path_depend=${build_root}/output/${build_name_depend}
-        product_path_depend=${build_root}/product/${build_name_depend}
-        toolchain_path_depend=${build_root}/toolchain/${build_name_depend}
+     if [[ ! -z ${name_depend} ]]; then
 
-        if [[ ! -d ${output_path_depend} ]]; then
-            mkdir -p ${output_path_depend}
-        fi
+        for depend in ${name_depend}
+        do
+        echo "depend= ${depend}" 
+        build_name_depend=${depend}-${target_arch}
+        source_path_depend="${source_path_depend} ${build_root}/src/${build_name_depend}"
+        output_path_depend="${output_path_depend} ${build_root}/output/${build_name_depend}"
+        product_path_depend="${product_path_depend} ${build_root}/product/${build_name_depend}"
+        toolchain_path_depend="${toolchain_path_depend} ${build_root}/toolchain/${build_name_depend}"
 
-        if [[ ! -d ${product_path_depend} ]]; then
-            mkdir -p ${product_path_depend}
-        fi
+        # if [[ ! -d ${output_path_depend} ]]; then
+        #     mkdir -p ${output_path_depend}
+        # fi
 
+        # if [[ ! -d ${product_path_depend} ]]; then
+        #     mkdir -p ${product_path_depend}
+        # fi
+        done
         echo ""
         echo "build_name_depend = $build_name_depend"
         echo ""
@@ -434,7 +437,6 @@ function reset() {
     upstream=""
     branch=""
     local_repo=""
-    build_root=""
     source_path=""
     output_path=""
     product_path=""
@@ -442,6 +444,7 @@ function reset() {
     build_name_depend=""
     source_path_depend=""
     output_path_depend=""
+    output_pkg_config=""
     product_path_depend=""
     toolchain_path_depend=""
     cfg_flags=""
@@ -502,8 +505,10 @@ toolchain_path=
 build_name_depend=
 source_path_depend=
 output_path_depend=
+output_pkg_config=
 product_path_depend=
 toolchain_path_depend=
+
 
 # 构建配置
 cfg_flags=

@@ -33,7 +33,6 @@ export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=flv"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=hls"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mov"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mp3"
-export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mp4"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mpegps"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mpegts"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-demuxer=mpegvideo"
@@ -45,3 +44,6 @@ export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-protocol=hls"
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-protocol=concat"
 
 export COMMON_CFG_FLAGS="$COMMON_CFG_FLAGS --enable-bsf=h264_mp4toannexb"
+
+
+

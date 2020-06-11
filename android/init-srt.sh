@@ -16,7 +16,7 @@ name=srt
 upstream=https://github.com/Haivision/srt
 
 # 库分支
-branch=origin/v1.4.1
+branch=master
 
 # 本地库地址
 local_repo=../repository/srt

@@ -80,7 +80,7 @@ function make_android_ffmpeg_config_params() {
         assembler_sub_dirs="x86"
 
         case "$ndk_rel" in
-        18* | 19* | 20*)
+        18* | 19* | 20* | 21*)
             android_platform_name=android-23
             ;;
         13* | 14* | 15* | 16* | 17*)
@@ -111,7 +111,7 @@ function make_android_ffmpeg_config_params() {
 
     # config
     export COMMON_CFG_FLAGS=
-    . ./config/module-mp4-to-ts.sh
+    . ${build_root}/../config/module-mp4-to-ts.sh
     cfg_flags="${COMMON_CFG_FLAGS} ${cfg_flags}"
 
     # with ffmpeg standard options:
@@ -124,6 +124,7 @@ function make_android_ffmpeg_config_params() {
     cfg_flags="$cfg_flags --enable-cross-compile"
     cfg_flags="$cfg_flags --target-os=android"
     cfg_flags="$cfg_flags --enable-pic"
+    cfg_flags="$cfg_flags --pkg-config=pkg-config"
 
     # 动态库 Shared libraries are .so (or in Windows .dll, or in OS X .dylib) files.
     # 静态库 Static libraries are .a (or in Windows .lib) files.
@@ -144,30 +145,40 @@ function make_android_ffmpeg_config_params() {
         cfg_flags="$cfg_flags --enable-asm"
         cfg_flags="$cfg_flags --enable-inline-asm"
     fi
-
-#需要引入多个库编译则需要循环去数据生成库，然后判断是否存在库文件
+    
+    #depends lib
+    for output_depend in ${output_path_depend}
+    do
     #with libsrt
-    if [[ -f "${output_path_depend}/../srt-${target_arch}/lib/libsrt.a" ]]; then
+    if [[ -f "${output_depend}/lib/libsrt.a" ]]; then
       echo "libsrt detected"
-       # export pkg_config_path=${output_path_depend}/lib/pkgconfig
+      output_pkg_config="${output_pkg_config} ${output_depend}/lib/pkgconfig"
       cfg_flags="$cfg_flags --enable-libsrt"
       cfg_flags="$cfg_flags --enable-protocol=libsrt"
-      # cfg_flags="$cfg_flags --pkg-config=pkg-config"
-      c_flags="$c_flags -I${output_path_depend}/../srt-${target_arch}/include"
-      ld_libs="$ld_libs -L${output_path_depend}/../srt-${target_arch}/lib -lsrt"
+    
+      c_flags="$c_flags -I${output_depend}/include"
+      ld_libs="$ld_libs -L${output_depend}/lib -lsrt -lc -lm -ldl  -lgcc -lstdc++"
     fi
-
     #with openssl
-    if [[ -f "${output_path_depend}/lib/libssl.a" ]]; then
+    if [[ -f "${output_depend}/lib/libssl.a" ]]; then
         echo "Openssl detected"
-        # export pkg_config_path=${output_path_depend}/lib/pkgconfig
+        output_pkg_config="${output_pkg_config} ${output_depend}/lib/pkgconfig"
         cfg_flags="$cfg_flags --enable-openssl"
-        # cfg_flags="$cfg_flags --pkg-config=pkg-config"
-        c_flags="$c_flags -I${output_path_depend}/include"
-        ld_libs="$ld_libs -L${output_path_depend}/lib -lssl -lcrypto"
+        c_flags="$c_flags -I${output_depend}/include"
+        ld_libs="$ld_libs -L${output_depend}/lib -lssl -lcrypto"
     fi
+    done
 
+    if [[ ! -z ${output_pkg_config} ]]; then
+    ##static library,need add this
+    cfg_flags="$cfg_flags --pkg-config-flags=--static"
 
+    for pkg_config in ${output_pkg_config}
+    do
+    export PKG_CONFIG_PATH="${pkg_config}:${PKG_CONFIG_PATH}"
+    done
+    fi
+    
     echo "c_flags = $c_flags"
     echo ""
     echo "cfg_flags = $cfg_flags"
@@ -181,6 +192,7 @@ function make_android_ffmpeg_config_params() {
     echo "android_standalone_toolchain_cross_prefix_name = $android_standalone_toolchain_cross_prefix_name"
     echo ""
     echo "PATH = $PATH"
+    echo "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}"
     echo "CLANG = $CLANG"
     echo "CXX = $CXX"
     echo "LD = $LD"
@@ -200,11 +212,6 @@ function make_android_product() {
     cd ${source_path}
 
     echo "current_directory = ${source_path}"
-## 交叉编译时Android引用openssl-v1.1.1最新版时需要打补丁添加识别字段,如果还是找不到，需要自己手动修改ffmpeg
-##.configure文件中openssl库判断部分
-    git add -A
-    git stash
-    patch -p0 ./configure ${current_path}/patch/configure-patch.patch
 
     ./configure ${cfg_flags} \
         --extra-cflags="$c_flags" \
@@ -227,6 +234,7 @@ function make_android_product() {
     echo ""
     echo "product_path_lib = ${product_path}/lib"
     echo ""
+
 }
 
 function make_android_product_so() {
@@ -280,9 +288,9 @@ function make_android_product_so() {
 
     echo "ffmpeg build complete"
     echo ""
+
     #    mkdir -p ${product_path}/lib/pkgconfig
-    #    cp ${output_path}/lib/pkgconfig/*.pc ${product_path}/lib/pkgconfig
-    #
+    #    cp ${output_path}/lib/pkgconfig/*.pc ${product_path}/lib/pkgconfig   
     #    for f in ${product_path}/lib/pkgconfig/*.pc; do
     #        # in case empty dir
     #        if [[ ! -f ${f} ]]; then
@@ -308,13 +316,15 @@ function compile() {
     make_android_ffmpeg_config_params
     make_android_toolchain
     make_android_product
-    # make_android_product_so
+    make_android_product_so
 }
 
 target_arch=$1
 arch_all="armv7a armv8a x86 x86_64"
 name=ffmpeg
-name_depend=openssl
+name_depend="srt openssl"
+build_root=$(pwd)/build
+output_pkg_config=
 assembler_sub_dirs=
 link_module_dirs="compat libavcodec libavfilter libavformat libavutil libswresample libswscale"
 so_simple_name=ffmpeg
@@ -323,7 +333,8 @@ so_name=lib${so_simple_name}.so
 function main() {
     case "$target_arch" in
     all)
-        for arch in ${arch_all}; do
+        for arch in ${arch_all}
+        do
             reset
             target_arch=${arch}
             echo_arch
@@ -335,13 +346,16 @@ function main() {
         compile
         ;;
     clean)
-        for arch in ${arch_all}; do
+        for arch in ${arch_all}
+        do
             if [[ -d ${name}-${arch} ]]; then
+                make clean
                 cd ${name}-${arch} && git clean -xdf && cd -
             fi
             rm -rf ./build/output/${name}-${arch}/**
             rm -rf ./build/product/${name}-${arch}/**
             rm -rf ./build/toolchain/${name}-${arch}/**
+            
 
             echo "Clean ${name}-${arch} ffmpeg successfully"
         done
