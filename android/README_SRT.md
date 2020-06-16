@@ -1,12 +1,3 @@
-
-
-  # 注意：CMakeLists.txt 添加以下内容支持Android编译 [reference link]{https://github.com/Haivision/srt/pull/1053?w=1}
-‘’‘
-elseif(ANDROID)
-  add_definitions(-DANDROID=1)
-  message(STATUS "DETECTED SYSTEM:ANDROID; ANDROID=1")
-’’‘
-
   # Init Repository 初始化库
 
   ```

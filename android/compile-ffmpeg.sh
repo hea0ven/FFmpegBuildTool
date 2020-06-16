@@ -111,7 +111,7 @@ function make_android_ffmpeg_config_params() {
 
     # config
     export COMMON_CFG_FLAGS=
-    . ${build_root}/../config/module-mp4-to-ts.sh
+    . ${build_root}/../config/module.sh
     cfg_flags="${COMMON_CFG_FLAGS} ${cfg_flags}"
 
     # with ffmpeg standard options:
