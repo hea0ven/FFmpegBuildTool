@@ -407,6 +407,56 @@ function make_openssl_product() {
     echo "finish openssl successfully"
 }
 
+function make_android_librtmp_product(){
+    echo "--------------------"
+    echo -e "${red}[*] compile librtmp ${nc}"
+    echo "--------------------"
+
+    current_path=$(pwd)
+
+    cd ${source_path}/${name}
+
+    echo "current_directory = ${source_path}"
+
+    make clean
+    make -j4 ${cfg_flags}
+    make install ${cfg_flags}
+
+    cp -r ${output_path}/include ${product_path}/include
+    mkdir -p ${product_path}/lib
+    cp ${output_path}/lib/librtmp.a ${product_path}/lib/librtmp.a
+
+    cd ${current_path}
+
+    echo "product_path = ${product_path}"
+    echo ""
+    echo "product_path_include = ${product_path}/include"
+    echo ""
+    echo "product_path_lib = ${product_path}/lib"
+    echo ""
+    echo "finish librtmap successfully"
+
+}
+
+function make_ios_or_mac_rtmp_product(){
+    echo "--------------------"
+    echo -e "${red}[*] compile librtmp ${nc}"
+    echo "--------------------"
+
+    current_path=$(pwd)
+    cd ${source_path}
+
+    echo "current_directory = ${source_path}"
+
+    make clean
+    make -j4 ${cfg_flags}
+    make install ${cfg_flags}
+
+    cd ${current_path}
+
+    echo "finish librtmap successfully"
+}
+
 
 # 构建AndroidNDK工具链
 function make_android_toolchain() {

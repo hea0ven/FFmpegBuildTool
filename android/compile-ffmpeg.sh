@@ -355,7 +355,6 @@ function main() {
             rm -rf ./build/output/${name}-${arch}/**
             rm -rf ./build/product/${name}-${arch}/**
             rm -rf ./build/toolchain/${name}-${arch}/**
-            
 
             echo "Clean ${name}-${arch} ffmpeg successfully"
         done
