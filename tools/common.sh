@@ -460,6 +460,10 @@ function make_ios_or_mac_rtmp_product(){
 
 # 构建AndroidNDK工具链
 function make_android_toolchain() {
+    echo "--------------------"
+    echo -e "${red}[*] ${nc}"
+    echo "--------------------"
+
     android_standalone_toolchain_flags="$android_standalone_toolchain_flags --install-dir=$toolchain_path"
     ${ANDROID_NDK}/build/tools/make-standalone-toolchain.sh \
         ${android_standalone_toolchain_flags} \

@@ -40,6 +40,9 @@ function make_mac_rtmp_config_params() {
 
 
 function compile() {
+    echo "--------------------"
+    echo -e "${red}[*] ${nc}"
+    echo "--------------------"
     check_env
     check_ios_mac_host
     make_env_params
@@ -54,6 +57,9 @@ name=rtmpdump
 build_root=$(pwd)/build
 
 function main() {
+    echo "--------------------"
+    echo -e "${red}[*] ${nc}"
+    echo "--------------------"
     current_path=`pwd`
     case "$target_arch" in
         armv7|armv7s|arm64|i386|x86_64)

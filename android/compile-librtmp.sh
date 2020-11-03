@@ -18,9 +18,9 @@ function make_android_librtmp_config_params() {
         android_platform_name=android-21
 
 
-        android_standalone_toolchain_name=arm-linux-android-${android_standalone_toolchain_clang}
+        android_standalone_toolchain_name=arm-linux-androideabi-${android_standalone_toolchain_clang}
 
-        android_standalone_toolchain_cross_prefix_name=arm-linux-android-
+        android_standalone_toolchain_cross_prefix_name=arm-linux-androideabi-
 
         # cfg_flags="$cfg_flags android-arm"
 
@@ -41,7 +41,7 @@ function make_android_librtmp_config_params() {
 
         android_standalone_toolchain_name=x86-linux-android-${android_standalone_toolchain_clang}
 
-        android_standalone_toolchain_cross_prefix_name=x86-linux-android-
+        android_standalone_toolchain_cross_prefix_name=i686-linux-android-
 
 
         # cfg_flags="$cfg_flags android-x86 no-asm"
